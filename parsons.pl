@@ -22,8 +22,8 @@ parsons(Max, Sol, Ans, Corrections, Score) :-
   findall(L-I, (
     member(L-I, Ans),
     L \= x
-  ), Filtered),
-  foldl(insert_missing, MissingLines, Filtered, State),
+  ), ValidLines),
+  foldl(insert_missing, MissingLines, ValidLines, State),
   solve(Max, Sol, [State-[]], 0, Edits),
   append(Insertions, Deletions, Edits, Corrections),
   length(Corrections, Changes),
@@ -45,7 +45,6 @@ solve(Max, Sol, S0s, Len0, Hist) :-
   ), S1sAll),
   remove_duplicates(S1sAll, S1s),
   % length(S1s, L), length(S1sAll, LAll), print(L), print(-), print(LAll), nl,
-  % nl, print(S1s), nl,
   solve(Max, Sol, S1s, Len1, Hist).
 
 action(Sol, swap(L0,L1), S0, S1) :-
@@ -112,46 +111,4 @@ match_indent_sign(Sol, Sign, L-I0) :-
 insert_missing(L-I, Ls0, Ls1) :-
   length(LsStart, L),
   append(LsStart, LsEnd, Ls0),
-  append(LsStart, [L-I|LsEnd], Ls1), !.
-
-%def foo(x):
-%   for y in x:
-%       print(y)
-%   print("\n")
-%[0-0,1-1,2-2,3-1]
-
-%0   def tournvote(votes):
-%1       tally = {}
-%2       for vote in votes:
-%3           num_ranks = len(vote)
-%4           for cur_rank in range(num_ranks):
-%5               if vote[cur_rank] not in tally:
-%6                   tally[vote[cur_rank]] = 0
-%7               tally[vote[cur_rank]] += num_ranks - cur_rank
-%8       highest_points = max(tally.values()); winner = None
-%9       for candidate in tally:
-%10         if tally[candidate] == highest_points:
-%11             if not winner:
-%12                 winner = candidate
-%13             else:
-%14                 winner = 'tie'
-%15     return winner
-%[0-0,1-1,2-1,3-2,4-2,5-3,6-4,7-3,8-1,9-1,10-2,11-3,12-4,13-3,14-4,15-1]
-
-% def tournvote(votes):
-%     tally = {}
-%     for vote in votes:
-%         num_ranks = len(vote)
-%         for cur_rank in range(num_ranks):
-%             if vote[cur_rank] not in tally:
-%                 tally[vote[cur_rank]] = 0
-%             else:
-%     highest_points = max(tally.values()); winner = None
-%     for candidate in tally:
-%         tally[vote[cur_rank]] += num_ranks - cur_rank
-%         if tally[candidate] == highest_points:
-%             winner = candidate
-%         if not winner:
-%             winner = 'tie'
-%     return winner
-%[0-0,1-1,2-1,3-2,4-2,5-3,6-4,13-3,8-1,9-1,7-2,10-2,12-3,11-2,14-3,15-1]
+  append(LsStart, [L-I|LsEnd], Ls1).
