@@ -4,25 +4,25 @@
 
 main(Argv) :- 
   maplist(term_string, [MaxEdits, Soln, Ans], Argv),
-  parsons(MaxEdits, Soln, Ans, Corrections, Score),
+  parsons(MaxEdits, Soln, Ans, Mods, Score),
   writeln(Score), 
-  writeln(Corrections).
+  writeln(Mods).
 
-parsons(MaxEdits, Soln, Ans, Corrections, Score) :-
-  findall(L-I, (member(L-I, Soln), \+ member(L-_, Ans)), MissingLines),
-  findall(L-I, (member(L-I, Ans), L \= x), ValidLines),
-  foldl(insert_missing, MissingLines, ValidLines, State),
-  findall(insert(L), (member(L-_, MissingLines)), Insertions),
-  findall(delete(L), (nth0(L, Ans, x-_)), Deletions),
-  append(Insertions, Deletions, InsertionsDeletions),
-  length(InsertionsDeletions, NInsertionsDeletions),
-  Remaining is MaxEdits - NInsertionsDeletions,
+parsons(MaxEdits, Soln, Ans, Mods, Score) :-
+  findall(L-I, (member(L-I, Soln), \+ member(L-_, Ans)), Missing),
+  findall(L-I, (member(L-I, Ans), L \= x), Valid),
+  foldl(insert_missing, Missing, Valid, State),
+  findall(delete(L), (nth0(L, Ans, x-_)), Dels),
+  findall(insert(L), (member(L-_, Missing)), Ins),
+  append(Dels, Ins, DelsIns),
+  length(DelsIns, NDelsIns),
+  Remaining is MaxEdits - NDelsIns,
   solve(Remaining, Soln, [State-[]], Edits),
   !,
-  append(Edits, InsertionsDeletions, Corrections),
-  length(Corrections, NCorrections),
-  Score is MaxEdits - NCorrections.
-parsons(_, _, _, [fail], 0).
+  append(DelsIns, Edits, Mods),
+  length(Mods, NMods),
+  Score is MaxEdits - NMods.
+parsons(_, _, _, fail, 0).
 
 solve(Remaining, Soln, Ss, Edits) :-
   Remaining > 0,
@@ -69,15 +69,15 @@ action(Soln, indent(L,IndentedLen), S0, S1) :-
   maplist(indent(IDiff), [L-I0|ToIndent], Indented),
   append(SStart, Indented, SEnd, S1),
   length(Indented, IndentedLen).
-action(Soln, cycle(Idx,L), S0, S1) :- 
-  append(SStart0, [L-_|SEnd0], S0),
-  nth0(Idx, S0, L-_),
-  Idx \= L,
-  nth0(L, Soln, L-I1),
+action(Soln, cycle(L0,L1), S0, S1) :- 
+  append(SStart0, [L1-_|SEnd0], S0),
+  nth0(L0, S0, L1-_),
+  L0 \= L1,
+  nth0(L1, Soln, L1-I1),
   append(SStart0, SEnd0, STmp),
-  nth0(L, S1, L-I1),
+  nth0(L1, S1, L1-I1),
   append(SStart1, SEnd1, STmp),
-  append(SStart1, [L-I1|SEnd1], S1).
+  append(SStart1, [L1-I1|SEnd1], S1).
 
 insert_missing(L-I, Ls0, Ls1) :-
   length(LsStart, L),
