@@ -44,7 +44,7 @@ solve(Max, Sol, S0s, Len0, Hist) :-
     action(Sol, Act, S0, S1)
   ), S1sAll),
   remove_duplicates(S1sAll, S1s),
-  % length(S1s, L), length(S1sAll, LAll), print(L), print(-), print(LAll), nl,
+  length(S1s, L), length(S1sAll, LAll), print(L), print(-), print(LAll), nl,
   solve(Max, Sol, S1s, Len1, Hist).
 
 action(Sol, swap(L0,L1), S0, S1) :-
@@ -69,6 +69,10 @@ action(Sol, indent(L,IndentedLen), S0, S1) :-
   ), ToIndent),
   \+ (
     [L1-In0|_] = SEnd,
+    match_indent_sign(Sol, Sign, L1-In0)
+  ),
+  \+ (
+    append(_, [L1-In0], SStart),
     match_indent_sign(Sol, Sign, L1-In0)
   ),
   maplist(indent(IDiff), [L-I0|ToIndent], Indented),
