@@ -31,9 +31,9 @@ solve(Remaining, Soln, Ss, Edits) :-
 solve(Rem0, Soln, S0s, Edits) :-
   Rem1 is Rem0 - 1,
   Rem1 > 0,
-  findall(S1-[Act|Edits0], (
+  findall(S1-[Edit|Edits0], (
     member(S0-Edits0, S0s), 
-    action(Soln, Act, S0, S1)
+    edit(Soln, Edit, S0, S1)
   ), S1sAll),
   remove_duplicates(S1sAll, S1s),
   S1s \= [],
@@ -42,7 +42,7 @@ solve(Rem0, Soln, S0s, Edits) :-
   % writeln(S1s),
   solve(Rem1, Soln, S1s, Edits).
 
-action(Soln, swap(L1,L0), S0, S1) :-
+edit(Soln, swap(L1,L0), S0, S1) :-
   append(SStart, [L0-I0|STmp0], S0),
   \+ nth0(L0, Soln, L0-I0),
   append(SMid, [L1-I1|SEnd], STmp0),
@@ -51,7 +51,7 @@ action(Soln, swap(L1,L0), S0, S1) :-
   nth0(L0, Soln, L0-I1),
   nth0(L1, Soln, L1-I0),
   append(SStart, [L1-I0|SMid], [L0-I1|SEnd], S1).
-action(Soln, indent(L,IndentedLen), S0, S1) :-
+edit(Soln, indent(L,IndentedLen), S0, S1) :-
   append(SStart, [L-I0|STmp0], S0),
   nth0(L, Soln, L-I1),
   I0 \= I1,
@@ -69,7 +69,7 @@ action(Soln, indent(L,IndentedLen), S0, S1) :-
   maplist(indent(IDiff), [L-I0|ToIndent], Indented),
   append(SStart, Indented, SEnd, S1),
   length(Indented, IndentedLen).
-action(Soln, cycle(L0,L1), S0, S1) :- 
+edit(Soln, cycle(L0,L1), S0, S1) :- 
   append(SStart0, [L1-_|SEnd0], S0),
   nth0(L0, S0, L1-_),
   L0 \= L1,
