@@ -4,13 +4,17 @@ import subprocess
 import sys
 
 def main(argv):
-  _, solver_exe, max_edits, soln_filepath, ans_filepath = argv
+  try:
+    _, solver_exe, max_edits, soln_filepath, ans_filepath = argv
 
-  with open(soln_filepath, "r") as soln_fp, \
-       open(ans_filepath, "r") as ans_fp:
-    soln, ans = preprocess(soln_fp.readlines(), ans_fp.readlines())
-    output = subprocess.check_output([solver_exe, max_edits, soln, ans])
-    print(output.decode("utf-8"))
+    with open(soln_filepath, "r") as soln_fp, \
+         open(ans_filepath, "r") as ans_fp:
+      soln, ans = preprocess(soln_fp.readlines(), ans_fp.readlines())
+      output = subprocess.check_output([solver_exe, max_edits, soln, ans])
+      print(output.decode("utf-8"))
+  except Exception as e:
+    print(f"Error: {e}", file=sys.stderr)
+    print("Usage: <solver exe> <max edits> <solution> <answer>", file=sys.stderr)
 
 
 def preprocess(soln, ans):
