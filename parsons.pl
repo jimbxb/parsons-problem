@@ -4,6 +4,9 @@
 
 main(Argv) :- 
   maplist(term_string, [MaxEdits, Soln, Ans], Argv),
+  run(MaxEdits, Soln, Ans).
+ 
+run(MaxEdits, Soln, Ans) :-
   parsons(MaxEdits, Soln, Ans, Mods, Score),
   writeln(Score), 
   writeln(Mods).

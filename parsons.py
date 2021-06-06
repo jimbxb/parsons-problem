@@ -5,16 +5,26 @@ import sys
 
 def main(argv):
   try:
-    _, solver_exe, max_edits, soln_filepath, ans_filepath = argv
+    _, mode, solver, max_edits, soln_filepath, ans_filepath = argv
 
     with open(soln_filepath, "r") as soln_fp, \
          open(ans_filepath, "r") as ans_fp:
       soln, ans = preprocess(soln_fp.readlines(), ans_fp.readlines())
-      output = subprocess.check_output([solver_exe, max_edits, soln, ans])
+
+      if mode == "-i":
+        output = subprocess.check_output([
+          "swipl", "-s", solver, 
+          "--", str(max_edits), soln, ans
+        ])
+      elif mode == "-c":
+        output = subprocess.check_output([solver, max_edits, soln, ans])
+      else: 
+        raise Exception("bad arguments")
+
       print(output.decode("utf-8"))
   except Exception as e:
     print(f"Error: {e}", file=sys.stderr)
-    print("Usage: <solver exe> <max edits> <solution> <answer>", file=sys.stderr)
+    print("Usage: [-i <solver script>|-c <solver exe>] <max edits> <solution> <answer>", file=sys.stderr)
 
 
 def preprocess(soln, ans):
