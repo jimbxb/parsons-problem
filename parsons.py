@@ -39,10 +39,18 @@ def preprocess(soln, ans):
 
 
 def indent_content(lines):
+  indents = [indentation(line) for line in lines]
+  non_zero = list(filter(lambda x: x != 0, indents))
+  indent = min(non_zero) if non_zero else 1 
+  
   return (
-    [(len(line) - len(line.lstrip(" "))) // 4 for line in lines], 
+    [ind // indent for ind in indents], 
     [line.lstrip(" ").rstrip("\n") for line in lines]
   )
+
+
+def indentation(line):
+  return len(line) - len(line.lstrip(" "))
 
 
 def prolog_pairs(*iters):
