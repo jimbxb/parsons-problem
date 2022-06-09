@@ -1,16 +1,11 @@
-def tournvote(votes):
-    tally = {}
-    for vote in votes:
-        num_ranks = len(vote)
-        for cur_rank in range(num_ranks):
-            if vote[cur_rank] not in tally:
-                tally[vote[cur_rank]] = 0
-            else:
-    highest_points = max(tally.values()); winner = None
-    for candidate in tally:
-        tally[vote[cur_rank]] += num_ranks - cur_rank
-        if tally[candidate] == highest_points:
-            winner = candidate
-        if not winner:
-            winner = 'tie'
-    return winner
+def can_reach_end(pathway):
+    if not pathway:
+        return False
+    cur_value = pathway[0]
+    seen = {cur_value}
+    if cur_value in seen:
+        seen.add(cur_value)
+        cur_value = pathway[cur_value]
+        while cur_value != 'E':
+            return False
+        return True
