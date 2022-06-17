@@ -6,7 +6,7 @@ A simple Parsons problem solver written in Prolog, with a helper script in Pytho
 ## Usage
 ```sh
 > swipl -O -o parsons -c parsons.pl
-> ./parsons.py -c ./parsons 10 soln.txt ans.txt
-6 
-[indent(12,3),cycle(7,13),cycle(11,12),cycle(9,7)]
+> ./parsons.py -c ./parsons 10 sol*.txt ans.txt
+8
+[swap(5,8),indent(10,1)]
 ```
