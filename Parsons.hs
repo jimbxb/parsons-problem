@@ -48,10 +48,7 @@ parsons max ans solns = do
     let preprocessed = concatMap (preprocess ans') solns'
     return $ foldr go Nothing preprocessed
   where 
-    go (s, a) (Just e) =
-        solve (length e - 1) s a <|> Just e
-    go (s, a) Nothing =
-        solve max s a       
+    go (s, a) e = solve (maybe max length e - 1) s a <|> e
 
 
 preprocess :: [String] -> [String] -> [([Int], [Maybe (Int, Int)])]
