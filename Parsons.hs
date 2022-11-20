@@ -1,7 +1,7 @@
 
 {-# LANGUAGE TupleSections #-}
 
-module Parsons where
+module Main where
 
 import Data.List
 import Data.Maybe
@@ -13,8 +13,6 @@ import Control.Applicative
 import System.Environment
 import System.Exit
 import System.Directory
-
-import Debug.Trace
 
 data Edit = Swap Int Int
           | Indent Int Int
@@ -51,9 +49,7 @@ parsons max ans solns = do
     return $ foldr go Nothing preprocessed
   where 
     go (s, a) (Just e) =
-        case solve (length e) s a of
-            Just e' -> Just $ if length e' < length e then e' else e
-            Nothing -> Just e
+        solve (length e - 1) s a <|> Just e
     go (s, a) Nothing =
         solve max s a       
 
@@ -90,14 +86,13 @@ solve max soln ans
     basic = map Delete invalid ++ map Insert missing
 
     go rem states
-      | rem <= 0 = Nothing
+      | rem < 0 = Nothing
       | otherwise = 
         case zip [0..] soln `lookup` states of
             Just edits -> 
                 Just edits
             Nothing -> 
                 go (rem - 1) 
-                    $ (\x -> trace (show $ (soln, head $ map fst x)) x) 
                     $ removeDups 
                     $ concatMap (\(st, es) -> map (second (:es)) $ edits soln st) 
                         states
