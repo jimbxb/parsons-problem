@@ -48,7 +48,7 @@ parsons max ans solns = do
     let preprocessed = concatMap (preprocess ans') solns'
     return $ foldr go Nothing preprocessed
   where 
-    go (s, a) e = solve (maybe max length e - 1) s a <|> e
+    go (s, a) e = solve (maybe max length e) s a <|> e
 
 
 preprocess :: [String] -> [String] -> [([Int], [Maybe (Int, Int)])]
@@ -60,7 +60,7 @@ preprocess ans soln =
         fixup [] = [Nothing]
         fixup xs = map Just xs
     in map (solnIndents,) 
-        $ filter ((\x -> nub x == x) . map fst . catMaybes)
+        $ filter (((==) =<< nub) . map fst . catMaybes)
         $ listProduct possibleIndexes
 
 
@@ -72,9 +72,9 @@ indentations strs =
 
 
 solve :: Int -> [Int] -> [Maybe (Int, Int)] -> Maybe [Edit]
-solve max soln ans 
+solve maxEdits soln ans 
     = (basic ++) . reverse 
-   <$> go (max - length basic) [(valid ++ map (,0) missing, [])]
+   <$> go (maxEdits - length basic) [(valid ++ map (,0) missing, [])]
   where
     (valid, invalid) = partitionEithers 
                      $ map (uncurry ((`maybe` Left) . Right))
@@ -82,14 +82,14 @@ solve max soln ans
     missing = filter (isNothing . (`lookup` valid)) [0..length soln - 1]
     basic = map Delete invalid ++ map Insert missing
 
-    go rem states
-      | rem < 0 = Nothing
+    go remaining states
+      | remaining <= 0 = Nothing
       | otherwise = 
         case zip [0..] soln `lookup` states of
             Just edits -> 
                 Just edits
             Nothing -> 
-                go (rem - 1) 
+                go (remaining - 1) 
                     $ removeDups 
                     $ concatMap (\(st, es) -> map (second (:es)) $ edits soln st) 
                         states
