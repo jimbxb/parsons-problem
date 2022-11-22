@@ -12,22 +12,22 @@ Stability   : experimental
 
 module Main where
 
-import Data.List
-import Data.Maybe
-import Data.Either
-import Data.Function
-import Text.Read
-import Control.Monad
-import Control.Arrow
-import Control.Applicative
-import Control.DeepSeq
-import Control.Exception
-import System.Environment
-import System.CPUTime
-import System.Timeout
-import System.Exit
-import System.Directory
-import GHC.Generics
+import Control.Applicative ((<|>))
+import Control.Arrow       (first, second)
+import Control.DeepSeq     (NFData, rnf)
+import Control.Exception   (evaluate)
+import Control.Monad       (join, foldM, liftM2)
+import Data.Either         (partitionEithers)
+import Data.Function       (on)
+import Data.List           (sort, sortBy)
+import Data.Maybe          (maybe, catMaybes, isNothing, fromMaybe)
+import GHC.Generics        (Generic)
+import System.Directory    (doesFileExist)
+import System.Environment  (getArgs)
+import System.CPUTime      (getCPUTime)
+import System.Timeout      (timeout)
+import System.Exit         (exitFailure)
+import Text.Read           (readMaybe)
 
 data Edit = Swap Int Int
           | Indent Int Int
