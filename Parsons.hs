@@ -1,3 +1,10 @@
+{-|
+Module      : Parsons
+Description : Parsons Problem Marker in Haskell 
+Copyright   : (c) James Barnes (2022)
+Maintainer  : jamesbarns2505@gmail.com
+Stability   : experimental
+-}
 
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE BangPatterns #-}
@@ -64,11 +71,12 @@ parsons max ans solns = do
     foldM (go t0) Nothing $ reverse $ zip [1..] preprocessed
   where
     go t0 curr (remaining, (soln, ans)) = do
-        t1 <- getCPUTime
-        let remTime = (maxTime - (t1 - t0)) `div` (remaining * 10 ^ 6)
+        t <- getCPUTime
+        let remTime = (maxTime - (t - t0)) `div` (remaining * 10 ^ 6)
         next <- timeout (fromInteger $ min maxTime remTime) 
             $ forceEval $ solve (maybe max length curr) soln ans
         return $ join next <|> curr
+
 
 preprocess :: [String] -> [String] -> [([Int], [Maybe (Int, Int)])]
 preprocess ans soln = 
