@@ -1,5 +1,7 @@
 
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Main where
 
@@ -8,18 +10,30 @@ import Data.Maybe
 import Data.Either
 import Data.Function
 import Text.Read
+import Control.Monad
 import Control.Arrow
 import Control.Applicative
+import Control.DeepSeq
+import Control.Exception
 import System.Environment
+import System.CPUTime
+import System.Timeout
 import System.Exit
 import System.Directory
+import GHC.Generics
 
 data Edit = Swap Int Int
           | Indent Int Int
           | Cycle Int Int
           | Insert Int
           | Delete Int
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
+
+instance NFData Edit
+
+
+maxTime :: Integer
+maxTime = 1 * 10 ^ 12
 
 
 main :: IO ()
@@ -46,10 +60,15 @@ parsons :: Int -> String -> [String] -> IO (Maybe [Edit])
 parsons max ans solns = do
     (ans':solns') <- map lines <$> mapM readFile (ans:solns)
     let preprocessed = concatMap (preprocess ans') solns'
-    return $ foldr go Nothing preprocessed
-  where 
-    go (s, a) e = solve (maybe max length e) s a <|> e
-
+    t0 <- getCPUTime
+    foldM (go t0) Nothing $ reverse $ zip [1..] preprocessed
+  where
+    go t0 curr (remaining, (soln, ans)) = do
+        t1 <- getCPUTime
+        let remTime = (maxTime - (t1 - t0)) `div` (remaining * 10 ^ 6)
+        next <- timeout (fromInteger $ min maxTime remTime) 
+            $ forceEval $ solve (maybe max length curr) soln ans
+        return $ join next <|> curr
 
 preprocess :: [String] -> [String] -> [([Int], [Maybe (Int, Int)])]
 preprocess ans soln = 
@@ -60,7 +79,7 @@ preprocess ans soln =
         fixup [] = [Nothing]
         fixup xs = map Just xs
     in map (solnIndents,) 
-        $ filter (((==) =<< nub) . map fst . catMaybes)
+        $ filter (((==) =<< removeDuplicates) . sort . catMaybes)
         $ listProduct possibleIndexes
 
 
@@ -90,7 +109,8 @@ solve maxEdits soln ans
                 Just edits
             Nothing -> 
                 go (remaining - 1) 
-                    $ removeDups 
+                    $ removeDuplicates 
+                    $ sortBy (compare `on` fst) 
                     $ concatMap (\(st, es) -> map (second (:es)) $ edits soln st) 
                         states
 
@@ -106,17 +126,16 @@ edits soln state
             ++ map snd mid
             ++ [(l0, i1)] 
             ++ map snd end 
-          , Swap ix0 ix1'
+          , Swap ix0 ix1
           )
         | ix0 <- [0..len-2]
         , let (start, (i0s, (l0, i0)):rest) = splitAt ix0 $ zip soln state
         , i0s == i0
-        , ix1 <- [0..len-2-ix0]
-        , let (mid, (i1s, (l1, i1)):end) = splitAt ix1 rest
+        , ix1 <- [ix0+1..len-1]
+        , let (mid, (i1s, (l1, i1)):end) = splitAt (ix1 - ix0 - 1) rest
         , i1s == i1
         , l0 > l1
-        , let ix1' = ix0 + ix1 + 1
-        , l0 == ix1'
+        , l0 == ix1
         , l1 == ix0
         ]
     indents = 
@@ -128,9 +147,9 @@ edits soln state
         | ix <- [0..len-1]
         , let (start, (is, (l, i)):rest) = splitAt ix $ zip soln state
         , l == ix
+        , is /= i
         , let diff = is - i
         , let match (x, (_, y)) = signum (x - y) == signum diff
-        , diff /= 0
         , ix == 0 || not (match $ last start)
         , let (toIndent, end) = span match rest
         ]
@@ -145,13 +164,11 @@ edits soln state
         ]
 
 
-removeDups :: [([(Int, Int)], [Edit])] -> [([(Int, Int)], [Edit])]
-removeDups = go . sortBy (compare `on` fst) 
-  where 
-    go ((x,_):xs@((x',_):_)) 
-      | x == x' = go xs
-    go (x:xs)   = x : go xs
-    go []       = []
+removeDuplicates :: Ord a => [(a, b)] -> [(a, b)]
+removeDuplicates ((x,_):xs@((x',_):_)) 
+  | x == x' = removeDuplicates xs
+removeDuplicates (x:xs)   = x : removeDuplicates xs
+removeDuplicates []       = []
 
 
 insertAt :: Int -> a -> [a] -> [a]
@@ -171,3 +188,6 @@ lookupAll pairs a = map snd $ filter ((a ==) . fst) pairs
 listProduct :: [[a]] -> [[a]]
 listProduct []     = [[]]
 listProduct (x:xs) = (:) <$> x <*> listProduct xs
+
+forceEval :: (NFData a) => a -> IO a
+forceEval a = evaluate a >>= liftM2 seq rnf return

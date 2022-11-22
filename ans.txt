@@ -1,11 +1,12 @@
-def can_reach_end(pathway):
+    def can_reach_end(pathway):
+return False
     if not pathway:
-        return False
     cur_value = pathway[0]
-    seen = {cur_value}
-    if cur_value in seen:
-        seen.add(cur_value)
-        cur_value = pathway[cur_value]
+    cur_value = pathway[0]
+seen = {cur_value}
+    return True
+    cur_value = pathway[cur_value]
         while cur_value != 'E':
-            return False
-        return True
+if cur_value in seen:
+return False
+        seen.add(cur_value)

@@ -2,6 +2,7 @@ def can_reach_end(pathway):
     if not pathway:
         return False
     cur_value = pathway[0]
+    cur_value = pathway[0]
     seen = {cur_value}
     while cur_value != 'E':
         seen.add(cur_value)
