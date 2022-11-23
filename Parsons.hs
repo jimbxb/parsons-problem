@@ -23,7 +23,7 @@ import Data.Maybe (catMaybes, fromMaybe, isNothing, maybe)
 import GHC.Generics (Generic)
 import System.CPUTime (getCPUTime)
 import System.Directory (doesFileExist)
-import System.Environment (getArgs)
+import System.Environment (getArgs, getEnv)
 import System.Exit (exitFailure)
 import System.Timeout (timeout)
 import Text.Read (readMaybe)
@@ -39,9 +39,10 @@ data Edit
 instance NFData Edit
 
 maxTime :: Integer
-maxTime = 1 * 10 ^ 12
+maxTime = 59 * 10 ^ 12
 
 main :: IO ()
+-- main = grok
 main = do
   argv <- getArgs
   case (argv, readMaybe $ head argv) of
@@ -59,6 +60,26 @@ main = do
               print edits
         else exitFailure
     _ -> exitFailure
+
+grok :: IO ()
+grok = do
+  let max = 10
+  let ans = "answer.txt"
+  let solns = ["soln1.txt"]
+  let maxTime = 60 * 10 ^ 6
+  secret <- getEnv "CHECKER_SECRET"
+  mbEdits <- join <$> timeout maxTime (parsons max ans solns)
+  case mbEdits of
+    Nothing ->
+      putStrLn $
+      "{ \"secret\": " ++
+      show secret ++ ", \"score\": 0, \"output_msg\": \"too many edits\" }"
+    Just edits ->
+      putStrLn $
+      "{ \"secret\": " ++
+      show secret ++
+      ", \"score\": " ++
+      show (10 - length edits) ++ ", \"output_msg\": " ++ show edits ++ " }"
 
 parsons :: Int -> String -> [String] -> IO (Maybe [Edit])
 parsons max ans solns = do
@@ -146,7 +167,7 @@ edits soln state = swaps ++ indents ++ cycles
       , l == ix
       , is /= i
       , let diff = is - i
-      , let match (x, (_, y)) = signum (x - y) == signum diff
+      , let match (x, (_, y)) = x - y == diff
       , ix == 0 || not (match $ last start)
       , let (toIndent, end) = span match rest
       ]
@@ -159,7 +180,7 @@ edits soln state = swaps ++ indents ++ cycles
       , ix /= l
       ]
 
-removeDuplicates :: Ord a => [(a, b)] -> [(a, b)]
+removeDuplicates :: (Eq a) => [(a, b)] -> [(a, b)]
 removeDuplicates ((x, _):xs@((x', _):_))
   | x == x' = removeDuplicates xs
 removeDuplicates (x:xs) = x : removeDuplicates xs
