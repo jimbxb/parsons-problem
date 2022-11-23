@@ -79,7 +79,7 @@ grok = do
       "{ \"secret\": " ++
       show secret ++
       ", \"score\": " ++
-      show (10 - length edits) ++ ", \"output_msg\": " ++ show edits ++ " }"
+      show (max - length edits) ++ ", \"output_msg\": " ++ show edits ++ " }"
 
 parsons :: Int -> String -> [String] -> IO (Maybe [Edit])
 parsons max ans solns = do
