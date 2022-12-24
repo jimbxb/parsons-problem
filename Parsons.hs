@@ -129,7 +129,7 @@ explain _ _ [] = "no edits"
 explain ans soln edits = unlines $ map (("-\t" ++) . describe) edits
   where
     describe (Swap a b) =
-      "swap " ++ trim (soln !! a) ++ " and " ++ trim (soln !! a)
+      "swap " ++ trim (soln !! a) ++ " and " ++ trim (soln !! b)
     describe (Indent a b) =
       "indent " ++
       trim (soln !! a) ++
